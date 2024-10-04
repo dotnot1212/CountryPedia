@@ -152,13 +152,14 @@ header .container-fluid .row {
 }
 .img-shadow {
   filter: drop-shadow(0.35rem 0.35rem 0.4rem rgba(255, 255, 255, 0.5));
+  -webkit-filter: drop-shadow(0.35rem 0.35rem 0.4rem rgba(255, 255, 255, 0.5));
 }
 .side-information {
   color: #fff;
   height: 400px;
   width: 100%;
   background: linear-gradient(-135deg, #0a4d6883 20%, #2c1e4d44),
-    url(/img/info-side/info-bg.jpg) center / cover;
+    url(https://imgurl.ir/uploads/q28775_info-bg.jpg) center / cover;
   display: flex;
   align-items: center;
 
