@@ -1,68 +1,120 @@
-let modeBtn = document.querySelector(".dark-mode .box button");
-let cardSubHead = document.querySelectorAll(".card-shadow");
+// Variables and Selectors
+const modeBtn = document.querySelector(".dark-mode .box button");
+const cardSubHead = document.querySelectorAll(".card-shadow");
 let modeFlag = localStorage.getItem("modeFlag") || "light";
-let boxElement = document.querySelector(".dark-mode .box");
-let form = document.querySelector(".country-input");
-let countryInput = document.querySelector(".country-input input");
-let listElem = document.querySelector(".country-list");
+const boxElement = document.querySelector(".dark-mode .box");
+const form = document.querySelector(".country-input");
+const formBtn = document.querySelector(".country-input button");
+const headerBtn = document.querySelector('.box-title-info button')
+const countryInput = form.querySelector("input");
+const listElem = document.querySelector(".country-list");
+let newCountryList = [];
+let foundCountry = [];
+let filterValue;
 const backToTopButton = document.getElementById("back-to-top");
-
+let inputBox = "";
 let countryList = [];
-// filter variable
-let filterItems = document.querySelectorAll(
-  ".filter-line .list .item-filter i"
-);
 
-// load Event in browser
+// Event Listeners
 window.addEventListener("load", () => {
   setModeSetting();
+  scrollViewOn();
 });
-// events
 
 modeBtn.addEventListener("click", changeMode);
-filterItems.forEach((elem) => {
-  console.log(elem);
-  elem.addEventListener(
-    "mouseenter",
-    (e) => (elem.className = "bi bi-x-circle-fill d-flex ms-2")
-  );
-  elem.addEventListener(
-    "mouseleave",
-    (e) => (elem.className = "bi bi-x-circle d-flex ms-2")
-  );
+headerBtn.addEventListener('click', tpList);
+function tpList() {
+  dropdownButton.scrollIntoView({ behavior: "smooth" });
+}
+formBtn.addEventListener("click", (e) => {
 });
-
-// disable preventDefalut
 form.addEventListener("submit", (e) => {
   e.preventDefault();
+  searchCountry(form)
+
 });
 
-// event for keyup in keyboard
 countryInput.addEventListener("keyup", searchCountry);
 
-// search input Value
-function searchCountry(e) {
-  if (e.keyCode == 13) {
-    countryFindRun(e.key);
-  }
-  countryFindRun(e.key);
-}
 
-// functions ...
+// Functions
 
-// find country of user want to see
+// set filter on countries
 function countryFindRun() {
-  const foundCountry = countryList.filter((country) => {
+  foundCountry = countryList.filter((country) => {
     let inputValue = countryInput.value.toLowerCase().trim();
     return country.name.toLowerCase().includes(inputValue);
   });
-
   listElem.innerHTML = "";
-  foundCountry.forEach((countryFounded) => {
-    countriesGen(countryFounded);
-  });
+  if (!countryInput.value.toLowerCase().trim()) {
+    countryList.forEach((countryFounded) => {
+      countriesGen(countryFounded);
+    });
+  } else {
+    foundCountry.forEach((countryFounded) => {
+      countriesGen(countryFounded);
+    });
+  }
+  setModeCountry(filterValue);
 }
-// change mode
+
+// set mode on countries
+function setModeCountry(value) {
+  newCountryList = [...foundCountry]; // ایجاد یک کپی از countryList
+
+  // Define filter functions
+  const filterFunctions = {
+    "a-z": (list) => list.sort((a, b) => a.name.localeCompare(b.name)),
+    populate: (list) => list.sort((a, b) => b.population - a.population),
+    "Breadth-down": (list) => list.sort((a, b) => a.area - b.area),
+    "Breadth-up": (list) => list.sort((a, b) => b.area - a.area),
+    "driving-left": (list) =>
+      list.filter((country) => country.drivingSide === "left"),
+    "driving-right": (list) =>
+      list.filter((country) => country.drivingSide === "right"),
+  };
+
+  // Check if filterValue is a valid key in filterFunctions
+  if (filterFunctions[value]) {
+    // Apply filter function
+    newCountryList = filterFunctions[value](foundCountry);
+  }
+  listElem.innerHTML = "";
+
+  if (newCountryList) {
+    // Display filtered list
+    newCountryList.forEach((country) => {
+      countriesGen(country);
+    });
+  } else {
+    // Display filtered list
+    foundCountry.forEach((country) => {
+      countriesGen(country);
+    });
+  }
+  scrollViewOn();
+}
+
+// keyboard Event
+
+let isFirstRun = true;
+
+function searchCountry(e) {
+  console.log(e);
+  
+  if (e.keyCode === 13 || e.tagName == 'FORM') {
+    
+    if (countryInput.value.trim() !== "") {
+      countryFindRun();
+      isFirstRun = true
+    } else if (isFirstRun) {
+      countryFindRun();
+      isFirstRun = false;
+    }
+  }
+}
+
+// change color mode
 function changeMode() {
   if (modeFlag === "dark") {
     modeFlag = "light";
@@ -72,7 +124,8 @@ function changeMode() {
   setModeSetting();
   localStorage.setItem("modeFlag", modeFlag);
 }
-// mode design
+
+// color mode design
 function setModeSetting() {
   if (modeFlag === "light") {
     document.documentElement.setAttribute("data-bs-theme", "light");
@@ -121,9 +174,7 @@ function countNum() {
   });
 }
 
-const noticeElems = document.querySelectorAll(".notice");
-const infoSIde = document.querySelectorAll(".side-information");
-
+// create country
 function countriesGen(country) {
   listElem.insertAdjacentHTML(
     "beforeend",
@@ -137,95 +188,230 @@ function countriesGen(country) {
                     <img
                       class="country-img d-flex mb-3 mb-md-0"
                       src="${country.flag}"
-                      alt=""
+                      alt="پرچم"
+                      title="پرچم کشور"
                     />
                   </div>
                   <div class="col-12 col-md-11">
                     <ul class="list mb-0 list-unstyled d-flex">
-                      <li class="item">
+                      <li class="item" title="اسم کشور">
                         نام : <span class="name-item">${country.name}</span>
                       </li>
-                      <li class="item">
-                        قاره : <span class="continent-item">${country.continent}</span>
+                      <li class="item" title="اسم قاره کشور مورد نظر">
+                        قاره : <span class="continent-item">${
+                          country.continent
+                        }</span>
                       </li>
-                      <li class="item">
-                        مساحت : <span class="size-item">(km2) ${country.area} </span>
+                      <li class="item" title="مساحت کشور">
+                        مساحت : <span class="size-item">(km2) ${Number(
+                          country.area
+                        ).toLocaleString()} </span>
                       </li>
-                      <li class="item">
-                        جهت رانندگی : <span class="driving-item">${country.drivingSide}</span>
+                      <li class="item" title="جمعیت کشور">
+                         جمعیت : <span class="population">${Number(
+                           country.population
+                         ).toLocaleString()}</span>
                       </li>
                     </ul>
                   </div>
                 </div>
               </div>`
   );
-  let countNumExecuted = false;
-
-  const countryBoxes = document.querySelectorAll(".country-box");
-  window.addEventListener("scroll", () => {
-    countryBoxes.forEach((box) => {
-      const rect = box.getBoundingClientRect();
-      if (rect.top < window.innerHeight && rect.bottom > 0) {
-        box.classList.add("in-view");
-      } else {
-        box.classList.remove("in-view");
-      }
-    });
-
-    noticeElems.forEach((note) => {
-      const rect = note.getBoundingClientRect();
-      if (rect.top < window.innerHeight && rect.bottom > 0) {
-        note.classList.add("in-view");
-        document.querySelector(".section-borders").classList.add("in-view");
-        if (!countNumExecuted) {
-          countNum(); // Call countNum() only if it hasn't been executed before
-          countNumExecuted = true; // Set the flag to true
-        }
-      }
-    });
-
-    infoSIde.forEach((info) => {
-      const rect = info.getBoundingClientRect();
-      if (rect.top < window.innerHeight && rect.bottom > 0) {
-        info.classList.add("in-view");
-      }
-    });
-
-    const scrollPosition = window.scrollY;
-    if (scrollPosition > 200) {
-      backToTopButton.classList.remove('d-none')
-    } else {
-      backToTopButton.classList.add('d-none')
-
-    }
-
-
-  });
 }
 
+const noticeElems = document.querySelectorAll(".notice");
+const infoSIde = document.querySelectorAll(".side-information");
+let countNumExecuted = false;
+// when view infront user
+function scrollViewOn() {
+  const countryBoxes = document.querySelectorAll(".country-box");
 
+  countryBoxes.forEach((box) => {
+    const rect = box.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      box.classList.add("in-view");
+    } else {
+      box.classList.remove("in-view");
+    }
+  });
+
+  noticeElems.forEach((note) => {
+    const rect = note.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      note.classList.add("in-view");
+      document.querySelector(".section-borders").classList.add("in-view");
+      if (!countNumExecuted) {
+        countNum(); // Call countNum() only if it hasn't been executed before
+        countNumExecuted = true; // Set the flag to true
+      }
+    }
+  });
+
+  infoSIde.forEach((info) => {
+    const rect = info.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      info.classList.add("in-view");
+    }
+  });
+
+  const scrollPosition = window.scrollY;
+  if (scrollPosition > 200) {
+    backToTopButton.classList.remove("d-none");
+  } else {
+    backToTopButton.classList.add("d-none");
+  }
+}
+
+window.addEventListener("scroll", () => {
+  scrollViewOn();
+});
+
+// Add click event to the back to top button
 backToTopButton.addEventListener("click", () => {
+  // Scroll to the top of the page
   window.scrollTo(0, 0);
 });
 
-// api countries
+// API endpoint for countries
 const url = `https://restcountries.com/v3.1/all`;
 
+// Fetch the API data
 fetch(url)
   .then((response) => response.json())
   .then((data) => {
+    // Extract the country data
     let countries = data;
-    console.log(typeof data);
     for (const country of countries) {
+      // Create an object with country information
       let infoCountry = {
         name: `${country.name.common}`,
         area: `${country.area}`,
         continent: `${country.region}`,
         drivingSide: `${country.car.side}`,
         flag: `${country.flags.png}`,
+        population: `${country.population}`,
       };
+
+      // Add the country to the country list
       countryList.push(infoCountry);
+
+      // Generate country information
       countriesGen(infoCountry);
     }
   })
   .catch((error) => console.error("Error:", error));
+
+// Select the dropdown button and menu
+const dropdownButton = document.querySelector(".dropdown-buttoned");
+const dropdownMenu = document.querySelector(".dropdown-menued");
+const listFilterItem = document.querySelector(".filter-line .list");
+
+// Add change event to each input in the dropdown menu
+dropdownMenu.querySelectorAll("input").forEach((input) => {
+  input.addEventListener("change", (e) => {
+    // Clear the filter list
+    listFilterItem.innerHTML = "";
+
+    // Get the filter name from the label's dataset
+    let filterName =
+      e.target.parentElement.querySelector("label").dataset.setValue;
+
+    // Run the country find function
+    countryFindRun();
+
+    // Set the filter value
+    filterValue = filterName;
+
+    // Set the mode to country
+    setModeCountry(filterValue);
+
+    // Add a new filter item to the list
+    listFilterItem.insertAdjacentHTML(
+      "beforeend",
+      `<li class="item-filter m-1">
+            <button class="btn btn-warning d-flex align-items-center">
+              ${filterName}<i class="bi bi-x-circle d-flex ms-2"></i>
+            </button>
+          </li>`
+    );
+
+    // Select all filter items
+    let filterItems = document.querySelectorAll(
+      ".filter-line .list .item-filter i"
+    );
+
+    // Add events to each filter item
+    filterItems.forEach((elem) => {
+      // Add click event to remove the filter item
+      elem.addEventListener("click", (e) => {
+        e.target.parentElement.parentElement.remove();
+        listFilterItem.innerHTML = "";
+
+        // Uncheck all inputs in the dropdown menu
+        dropdownMenu.querySelectorAll("input").forEach((input) => {
+          input.checked = false;
+        });
+
+        // Reset the filter value
+        filterValue = "";
+
+        // Run the country find function
+        countryFindRun();
+      });
+
+      // Add mouseenter event to change the icon
+      elem.addEventListener(
+        "mouseenter",
+        (e) => (elem.className = "bi bi-x-circle-fill d-flex ms-2")
+      );
+
+      // Add mouseleave event to change the icon back
+      elem.addEventListener(
+        "mouseleave",
+        (e) => (elem.className = "bi bi-x-circle d-flex ms-2")
+      );
+    });
+  });
+});
+
+// Add click event to the dropdown button
+dropdownButton.addEventListener("click", () => {
+  // Toggle the show class on the dropdown menu
+  dropdownMenu.classList.toggle("show");
+  if (dropdownMenu.classList.contains('show')) {
+    dropdownButton.querySelector('i').className = 'bi d-flex ms-1 bi-caret-down-fill'
+  } else {
+    dropdownButton.querySelector('i').className = 'bi d-flex ms-1 bi-caret-up-fill'
+
+  }
+});
+
+// Select all close buttons
+const closeButtonInput = document.querySelector(".close-all-input");
+
+// Add click event to each close button
+closeButtonInput.addEventListener("click", () => {
+  // If no filter value, exit
+
+  if (!filterValue) {
+    return;
+  }
+
+  // Select all radios in the dropdown menu
+  const radios = dropdownMenu.querySelectorAll('input[type="radio"]');
+
+  // Clear the filter list
+  listFilterItem.innerHTML = "";
+
+  // Loop through each radio
+  radios.forEach((radio) => {
+    // Uncheck the radio
+    radio.checked = false;
+  });
+
+  // Reset the filter value
+  filterValue = "";
+
+  // Run the country find function
+  countryFindRun();
+});
