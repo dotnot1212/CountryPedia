@@ -61,16 +61,17 @@ function countryFindRun() {
 // set mode on countries
 function setModeCountry(value) {
   newCountryList = [...foundCountry]; // ایجاد یک کپی از countryList
+console.log('f');
 
   // Define filter functions
   const filterFunctions = {
-    "a-z": (list) => list.sort((a, b) => a.name.localeCompare(b.name)),
-    populate: (list) => list.sort((a, b) => b.population - a.population),
-    "Breadth-down": (list) => list.sort((a, b) => a.area - b.area),
-    "Breadth-up": (list) => list.sort((a, b) => b.area - a.area),
-    "driving-left": (list) =>
+    "حروف": (list) => list.sort((a, b) => a.name.localeCompare(b.name)),
+    'جمعیت': (list) => list.sort((a, b) => b.population - a.population),
+    "مساحت : کمترین": (list) => list.sort((a, b) => a.area - b.area),
+    "مساحت : بیشترین": (list) => list.sort((a, b) => b.area - a.area),
+    "جهت رانندگی : چپ": (list) =>
       list.filter((country) => country.drivingSide === "left"),
-    "driving-right": (list) =>
+    "جهت رانندگی : راست": (list) =>
       list.filter((country) => country.drivingSide === "right"),
   };
 
@@ -80,7 +81,10 @@ function setModeCountry(value) {
     newCountryList = filterFunctions[value](foundCountry);
   }
   listElem.innerHTML = "";
-
+  console.log(value);
+  
+ console.log(newCountryList);
+ 
   if (newCountryList) {
     // Display filtered list
     newCountryList.forEach((country) => {
@@ -223,6 +227,7 @@ const noticeElems = document.querySelectorAll(".notice");
 const infoSIde = document.querySelectorAll(".side-information");
 let countNumExecuted = false;
 // when view infront user
+// when view infront user
 function scrollViewOn() {
   const countryBoxes = document.querySelectorAll(".country-box");
 
@@ -315,15 +320,13 @@ dropdownMenu.querySelectorAll("input").forEach((input) => {
     // Get the filter name from the label's dataset
     let filterName =
       e.target.parentElement.querySelector("label").dataset.setValue;
-
+      filterValue = filterName;
     // Run the country find function
     countryFindRun();
 
-    // Set the filter value
-    filterValue = filterName;
+  
 
     // Set the mode to country
-    setModeCountry(filterValue);
 
     // Add a new filter item to the list
     listFilterItem.insertAdjacentHTML(
