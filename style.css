@@ -631,6 +631,7 @@ footer .media-side a::before {
 }
 @media screen and (max-width: 768px) {
   .header-bg-icon {
+    margin-top: 50px;
     width: 70%;
   }
   .section-borders span:nth-child(2) {
