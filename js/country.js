@@ -6,11 +6,10 @@ const boxElement = document.querySelector(".dark-mode .box");
 const backToTopButton = document.getElementById("back-to-top");
 let btnBack = document.querySelector(".btn-return");
 // Event Listeners
-window.addEventListener("load", () => {
-  setModeSetting();
-  let countryCode = localStorage.getItem("countries");
+modeBtn.addEventListener("click", changeMode);
 
-  getData(countryCode);
+window.addEventListener("load", () => {
+  setModeSetting(); // تنظیم حالت رنگ
 });
 
 btnBack.addEventListener("click", () => {
@@ -21,9 +20,9 @@ btnBack.addEventListener("click", () => {
   }
 });
 
-modeBtn.addEventListener("click", changeMode);
-
 // Functions
+let countryCode = localStorage.getItem("countries");
+getData(countryCode);
 
 // change color mode
 function changeMode() {
@@ -67,38 +66,9 @@ backToTopButton.addEventListener("click", () => {
   window.scrollTo(0, 0);
 });
 
-// const keyweatherApi = "e445fc7ee481cdba9f0bc766044cb808";
-// const url = "https://restcountries.com/v3.1/name/iran";
-// const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=iran&appid=e445fc7ee481cdba9f0bc766044cb808`;
-
-
-async function getWeatherData(lat,lon) {
-  console.log("Fetching weather data from API...");
-  const weatherApiUrl = 'https://api.openweathermap.org/data/2.5/weather';
-  const params = new URLSearchParams({
-    lat: lat,
-    lon: lon,
-    appid: 'e445fc7ee481cdba9f0bc766044cb808'
-  });
-
-  try {
-    const response = await fetch(`${weatherApiUrl}?${params.toString()}`);
-    const weatherData = await response.json();
-    console.log(weatherData);
-    
-    const weatherState = weatherData.weather[0].description;
-    return weatherState;
-  } catch (error) {
-    console.error("Error fetching weather data:", error);
-  }
-}
+const url = "https://restcountries.com/v3.1/name/iran";
 
 function processCountryData(country) {
-  const lat = country.latlng[0]
-
-  const lon = country.latlng[1]
-  
-
   const countryInfo = {
     name: country.name.common,
     area: country.area,
@@ -109,80 +79,72 @@ function processCountryData(country) {
     capital: country.capital,
     languages: Object.values(country.languages),
     borders: country.borders,
-    climate: '',
   };
-  console.log(countryInfo.borders);
 
+  // دریافت نام کامل کشور های هم مرز
+  const bordersNames = countryInfo.borders
+    ? countryInfo.borders.map((border) =>
+        fetch(`https://restcountries.com/v3.1/alpha/${border}`)
+          .then((response) => response.json())
+          .then((data) => data[0].name.common)
+          .catch((error) => {
+            console.error("Error fetching border data:", error);
+            return null; // در صورت خطا، null برگردانید
+          })
+      )
+    : [];
 
- // دریافت نام کامل کشور های هم مرز
-if (countryInfo.borders) {
-  const borders = country.borders;
-  const bordersNames = [];
-  borders.forEach((border) => {
-    fetch(`https://restcountries.com/v3.1/alpha/${border}`)
-      .then((response) => response.json())
-      .then((data) => {
-        const borderName = data[0].name.common;
-        bordersNames.push(borderName);
-      })
-      .catch((error) => console.error("Error fetching border data:", error));
+  // استفاده از Promise.all برای انتظار برای تمام درخواست‌ها
+  return Promise.all(bordersNames).then((borders) => {
+    countryInfo.borders = borders.filter(Boolean); // فیلتر کردن null ها
+
+    const countryInfoLeft = [
+      { label: "قاره", value: countryInfo.continent },
+      { label: "مساحت", value: Number(countryInfo.area).toLocaleString() },
+      { label: "پایتخت", value: countryInfo.capital },
+      countryInfo.borders.length > 0
+        ? { label: "کشور های هم مرز", value: countryInfo.borders.join(" - ") }
+        : { label: "کشور های هم مرز", value: "Nothing" },
+      { label: "پرچم", value: countryInfo.flag },
+    ];
+
+    const countryInfoRight = [
+      { label: "اسم", value: countryInfo.name },
+      {
+        label: "زبان",
+        value: Object.values(countryInfo.languages)
+          .slice(0, 10)
+          .reduce((acc, language) => {
+            acc.push(language);
+            return acc;
+          }, []),
+      },
+      {
+        label: "جمعیت",
+        value: Number(countryInfo.population).toLocaleString(),
+      },
+      { label: "واحد پول", value: Object.values(country.currencies)[0].name },
+      { label: "جهت رانندگی", value: countryInfo.drivingSide },
+      {
+        label: "کد تلفن",
+        value: country.idd.suffixes.slice(0, 10).reduce((acc, suffix) => {
+          acc.push(`${country.idd.root}${suffix}`);
+          return acc;
+        }, []),
+      },
+    ];
+
+    return { left: countryInfoLeft, right: countryInfoRight };
   });
- 
- 
-   countryInfo.borders = bordersNames
- 
-}
- 
-
-  // استفاده از promise برای دریافت داده‌های آب و هوا
-  return getWeatherData(lat, lon)
-    .then((weatherState) => {
-      console.log(typeof weatherState);
-      
-      countryInfo.climate = weatherState;
-      return countryInfo;
-    })
-    .then((countryInfo) => {
-      const countryInfoLeft = [
-        { label: "قاره", value: countryInfo.continent },
-        { label: "مساحت", value: Number(countryInfo.area).toLocaleString() },
-        { label: "پایتخت", value: countryInfo.capital },
-        countryInfo.borders && countryInfo.borders.length > 0
-          ? { label: "کشور های هم مرز", value: countryInfo.borders.join(' - ') }
-          :{ label: "کشور های هم مرز", value: 'Nothing' },
-        { label: "آب و هوا", value: countryInfo.climate },
-        { label: "پرچم", value: countryInfo.flag },
-      ].filter(Boolean); // filter out null values
-
-      const countryInfoRight = [
-        { label: "اسم", value: countryInfo.name },
-        { label: "زبان", value: countryInfo.languages.join(" _ ") },
-        { label: "جمعیت", value: Number(countryInfo.population).toLocaleString() },
-        { label: "واحد پول", value: Object.values(country.currencies)[0].name },
-        { label: "جهت رانندگی", value: countryInfo.drivingSide },
-        {
-          label: "کد تلفن",
-          value: Array.from({ length: 10 }, (_, i) => (
-            country.idd.root + country.idd.suffixes[i % country.idd.suffixes.length]
-          )).join(' _ '),
-        },
-      ];
-
-
-
-
-      return { left: countryInfoLeft, right: countryInfoRight };
-    })
-    .catch((error) => {
-      console.error("Error fetching weather data:", error);
-    });
 }
 
- function getData(countryCode) {
+function getData(countryCode) {
   console.log("Fetching data from API...");
   fetch(`https://restcountries.com/v3.1/alpha/${countryCode}`)
     .then((response) => {
-      console.log("Response received:", response);
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
       return response.json();
     })
     .then((data) => {
@@ -193,10 +155,10 @@ if (countryInfo.borders) {
     .then((data) => {
       console.log(data.left);
       console.log(data.right);
-      const sideRightDiv = document.querySelector(".side-right")
+      const sideRightDiv = document.querySelector(".side-right");
       const countryInfoRightList = data.right.map((item) => {
         const listItem = document.createElement("li");
-        listItem.style.wordBreak = 'break-all'
+        listItem.style.wordBreak = "break-all";
         const icon = document.createElement("i");
         const iconMap = {
           اسم: "bi bi-person",
@@ -215,15 +177,31 @@ if (countryInfo.borders) {
         } else {
           icon.className = "bi bi-question"; // Default icon if no match
         }
-
-       
-        listItem.innerHTML = `${item.label + ` : ` + item.value}`;        
+      
+        const containerDiv = document.createElement("div");
+        containerDiv.innerHTML = `${item.label} : `;
+        containerDiv.className = `items`;
+      
+        if (Array.isArray(item.value)) {
+          item.value.forEach((name) => {
+            const span = document.createElement("span");
+            span.innerText = name;
+            span.className = "badge badge-secondary m-1"; // استفاده از کلاس‌های بوت‌استرپ
+            containerDiv.appendChild(span);
+          });
+        } else {
+          const span = document.createElement("span");
+          span.innerText = item.value;
+          span.className = "badge badge-secondary m-1"; // استفاده از کلاس‌های بوت‌استرپ
+          containerDiv.appendChild(span);
+        }
+      
+        listItem.appendChild(containerDiv);
         listItem.appendChild(icon);
-
-        listItem.className =
-          "list-item d-flex align-items-center justify-content-between"; // Add a class to each list item
+        listItem.className = "list-item d-flex align-items-center justify-content-between"; // Add a class to each list item
         return listItem;
       });
+      
 
       const sideLeftDiv = document.querySelector(".side-left .list");
       const imgS = document.querySelector(".img-side img");
@@ -242,16 +220,14 @@ if (countryInfo.borders) {
         if (item.label == "پرچم") {
           imgS.src = item.value;
         } else if (iconName) {
-          
           icon.className = iconName;
         } else {
           icon.className = "bi bi-question ms-2"; // Default icon if no match
         }
-        if (item.label != 'پرچم') {
+        if (item.label != "پرچم") {
           listItem.innerHTML = `${item.label + ` : ` + item.value}`;
           listItem.appendChild(icon);
           listItem.className = "item btn mx-auto btn-outline-success"; // Add a class to each list item
-
         }
         return listItem;
       });
@@ -264,8 +240,8 @@ if (countryInfo.borders) {
       countryInfoRightList.forEach((listItem) => {
         sideRightDiv.appendChild(listItem);
       });
+      document.querySelector(".loader-container").classList.add("hide");
+      document.body.classList.remove("no-scroll");
     })
     .catch((error) => console.error("Error fetching country data:", error));
 }
-
-
