@@ -25,27 +25,11 @@
     />
     <link rel="stylesheet" href="css/country.css" />
   </head>
-  <body>
+  <body class="no-scroll">
     <header>
       <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid justify-content-around">
-          <ul class="navbar-nav mb-2 mb-lg-0">
-            <li class="nav-item dropdown">
-              <a
-                class="nav-link dropdown-toggle"
-                href="#"
-                role="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                زبان
-              </a>
-              <ul class="dropdown-menu position-absolute">
-                <li><a class="dropdown-item active" href="#">فارسی</a></li>
-                <li><a class="dropdown-item" href="#">انگلیسی</a></li>
-              </ul>
-            </li>
-          </ul>
+         
 
           <div class="dark-mode d-flex">
             <div class="box">
@@ -134,6 +118,15 @@
     <button class="d-none" id="back-to-top">
       <i class="bi d-flex p-1 bi-arrow-up-circle-fill fs-1"></i>
     </button>
+
+    <div class="loader-container">
+      <div class="loader">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+      </div>
+      <p class="mt-3 fs-3 text-dark">لطفا تا دریافت اطلاعات منتظر بمانید</p>
+    </div>
 
     <!-- script  -->
     <script
