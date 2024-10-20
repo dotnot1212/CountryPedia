@@ -19,6 +19,9 @@ let countryList = [];
 window.addEventListener("load", () => {
   setModeSetting();
   scrollViewOn();
+  document.querySelector(".loader-container").classList.add('hide');
+  document.body.classList.remove("no-scroll");
+
 
 });
 
@@ -183,6 +186,8 @@ function countNum() {
 
 // create country
 function countriesGen(country) {
+  console.log("جن");
+  
   listElem.insertAdjacentHTML(
     "beforeend",
     ` <div class="col-12 my-2">
@@ -224,16 +229,20 @@ function countriesGen(country) {
                 </div>
               </div>`
   );
-
-  document.querySelectorAll(".country-box").forEach((elem) => {
-    elem.addEventListener("click", () => {
-      let name = elem.querySelector(".list .name-item").title;
-      console.log(name);
-      
-      localStorage.setItem("countries", name);
-      window.location.href = "country.html";
-    });
+  // حذف رویدادهای قبلی
+  const countryBoxes = document.querySelectorAll(".country-box");
+  countryBoxes.forEach((elem) => {
+    elem.removeEventListener("click", handleClick); // حذف رویدادهای قبلی
+    elem.addEventListener("click", handleClick); // اضافه کردن رویداد جدید
   });
+
+  function handleClick() {
+    let name = this.querySelector(".list .name-item").title;
+    console.log(name);
+    
+    localStorage.setItem("countries", name);
+    window.location.href = "country.html";
+  }
 }
 
 const noticeElems = document.querySelectorAll(".notice");
